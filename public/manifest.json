@@ -1,6 +1,6 @@
 {
   "name": "筋トレサポート",
-  "short_name": "筋トレサポート",
+  "short_name": "筋サポ",
   "description": "筋トレの記録と管理をサポートするアプリ",
   "start_url": "/",
   "display": "standalone",
