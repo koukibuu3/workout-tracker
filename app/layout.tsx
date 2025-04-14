@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: '筋トレサポート',
+    title: '筋サポ',
   },
   viewport: {
     width: 'device-width',
