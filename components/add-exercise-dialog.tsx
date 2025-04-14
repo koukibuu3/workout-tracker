@@ -1,12 +1,24 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { addExercise } from "@/app/actions"
+import { useState } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { addExercise } from '@/app/actions'
 
 interface AddExerciseDialogProps {
   open: boolean
@@ -14,33 +26,47 @@ interface AddExerciseDialogProps {
   onSuccess?: () => void
 }
 
-export function AddExerciseDialog({ open, onOpenChange, onSuccess }: AddExerciseDialogProps) {
-  const [name, setName] = useState("")
-  const [category, setCategory] = useState("")
-  const [videoUrl, setVideoUrl] = useState("")
+export function AddExerciseDialog({
+  open,
+  onOpenChange,
+  onSuccess,
+}: AddExerciseDialogProps) {
+  const [name, setName] = useState('')
+  const [category, setCategory] = useState('')
+  const [videoUrl, setVideoUrl] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // カテゴリーの選択肢
-  const categories = ["胸", "背中", "肩", "腕", "脚", "腹筋", "有酸素", "その他"]
+  const categories = [
+    '胸',
+    '背中',
+    '肩',
+    '腕',
+    '脚',
+    '尻',
+    '腹筋',
+    '有酸素',
+    'その他',
+  ]
 
   // ダイアログが閉じられたときにフォームをリセット
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      setName("")
-      setCategory("")
-      setVideoUrl("")
+      setName('')
+      setCategory('')
+      setVideoUrl('')
     }
     onOpenChange(open)
   }
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      alert("種目名を入力してください")
+      alert('種目名を入力してください')
       return
     }
 
     if (!category) {
-      alert("カテゴリーを選択してください")
+      alert('カテゴリーを選択してください')
       return
     }
 
@@ -50,8 +76,8 @@ export function AddExerciseDialog({ open, onOpenChange, onSuccess }: AddExercise
       onSuccess?.()
       handleOpenChange(false)
     } catch (error) {
-      console.error("種目の追加に失敗しました:", error)
-      alert("種目の追加に失敗しました")
+      console.error('種目の追加に失敗しました:', error)
+      alert('種目の追加に失敗しました')
     } finally {
       setIsSubmitting(false)
     }
@@ -67,7 +93,12 @@ export function AddExerciseDialog({ open, onOpenChange, onSuccess }: AddExercise
         <div className="py-4 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">種目名</Label>
-            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="例: ベンチプレス" />
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="例: ベンチプレス"
+            />
           </div>
 
           <div className="space-y-2">
@@ -94,16 +125,22 @@ export function AddExerciseDialog({ open, onOpenChange, onSuccess }: AddExercise
               onChange={(e) => setVideoUrl(e.target.value)}
               placeholder="例: https://www.youtube.com/watch?v=..."
             />
-            <p className="text-xs text-muted-foreground">YouTubeやVimeoなどの動画URLを入力してください</p>
+            <p className="text-xs text-muted-foreground">
+              YouTubeやVimeoなどの動画URLを入力してください
+            </p>
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={isSubmitting}>
+          <Button
+            variant="outline"
+            onClick={() => handleOpenChange(false)}
+            disabled={isSubmitting}
+          >
             キャンセル
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? "保存中..." : "保存"}
+            {isSubmitting ? '保存中...' : '保存'}
           </Button>
         </DialogFooter>
       </DialogContent>
