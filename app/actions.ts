@@ -6,6 +6,83 @@ import { revalidatePath } from "next/cache"
 // デフォルトユーザーID（実際のアプリでは認証システムと連携）
 const DEFAULT_USER_ID = 1
 
+export type SimpleWorkoutInput = {
+  date: string
+  type: "log" | "plan"
+  name: string
+  sets?: number | null
+  reps?: number | null
+  weight?: number | null
+  memo?: string
+  time?: string | null
+  repeatPattern?: "daily" | "weekly" | "monthly" | null
+}
+
+async function findOrCreateWorkoutItem(name: string) {
+  const [existingItem] = (await sql`
+    SELECT id FROM workout_items
+    WHERE name = ${name}
+    ORDER BY id
+    LIMIT 1
+  `) as { id: number }[]
+
+  if (existingItem) {
+    return existingItem.id
+  }
+
+  const [createdItem] = (await sql`
+    INSERT INTO workout_items (name, category)
+    VALUES (${name}, NULL)
+    RETURNING id
+  `) as { id: number }[]
+
+  return createdItem.id
+}
+
+/**
+ * 自由入力の予定または記録を追加する。
+ * sets/reps は既存スキーマの必須列のため、未入力時は 0 として保存する。
+ */
+export async function addSimpleWorkout(input: SimpleWorkoutInput) {
+  const name = input.name.trim()
+  if (!name) {
+    throw new Error("内容を入力してください")
+  }
+
+  const itemId = await findOrCreateWorkoutItem(name)
+  const [detail] = (await sql`
+    INSERT INTO workout_details (item_id, sets, reps, weight, created_by)
+    VALUES (
+      ${itemId},
+      ${input.sets && input.sets > 0 ? input.sets : 0},
+      ${input.reps && input.reps > 0 ? input.reps : 0},
+      ${input.weight && input.weight > 0 ? input.weight : null},
+      ${DEFAULT_USER_ID}
+    )
+    RETURNING id
+  `) as { id: number }[]
+
+  if (input.type === "log") {
+    await sql`
+      INSERT INTO workout_logs (user_id, date, detail_id, memo)
+      VALUES (${DEFAULT_USER_ID}, ${input.date}, ${detail.id}, ${input.memo?.trim() || null})
+    `
+  } else {
+    await sql`
+      INSERT INTO workout_plans (user_id, date, time, detail_id, repeat_pattern)
+      VALUES (
+        ${DEFAULT_USER_ID},
+        ${input.date},
+        ${input.time || null},
+        ${detail.id},
+        ${input.repeatPattern || null}
+      )
+    `
+  }
+
+  revalidatePath("/")
+}
+
 // 種目一覧を取得
 export async function getWorkoutItems(): Promise<WorkoutItem[]> {
   const items = await sql<WorkoutItem[]>`

@@ -6,42 +6,56 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { DayDetail } from '@/components/day-detail'
-import { AddWorkoutDialog } from '@/components/add-workout-dialog'
+import { QuickAddWorkoutDrawer } from '@/components/quick-add-workout-drawer'
 import { ja } from 'date-fns/locale'
 
 export function CalendarView() {
-  const [date, setDate] = useState<Date | undefined>(new Date())
-  const [showAddWorkout, setShowAddWorkout] = useState(false)
+  const [date, setDate] = useState(new Date())
+  const [showQuickAdd, setShowQuickAdd] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const selectDate = (nextDate: Date | undefined) => {
+    if (!nextDate) return
+    setDate(nextDate)
+    setShowQuickAdd(true)
+  }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">カレンダー</h1>
-        <Button onClick={() => setShowAddWorkout(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          トレーニングを追加
+    <div className="mx-auto max-w-2xl space-y-5">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <p className="text-sm text-muted-foreground">予定と記録を、ひとつの場所で</p>
+          <h1 className="text-2xl font-bold tracking-tight">カレンダー</h1>
+        </div>
+        <Button className="shrink-0" onClick={() => setShowQuickAdd(true)}>
+          <Plus className="mr-1 h-4 w-4" />
+          追加
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={setDate}
-          locale={ja}
-          className="rounded-md border"
-        />
+      <Card>
+        <CardContent className="flex justify-center p-2 sm:p-4">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={selectDate}
+            locale={ja}
+            className="w-full"
+          />
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            {date && <DayDetail date={date} />}
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardContent className="p-4 sm:p-6">
+          <DayDetail key={`${date.toISOString()}-${refreshKey}`} date={date} onAdd={() => setShowQuickAdd(true)} />
+        </CardContent>
+      </Card>
 
-      <AddWorkoutDialog
-        open={showAddWorkout}
-        onOpenChange={setShowAddWorkout}
+      <QuickAddWorkoutDrawer
+        date={date}
+        open={showQuickAdd}
+        onOpenChange={setShowQuickAdd}
+        onSuccess={() => setRefreshKey((current) => current + 1)}
       />
     </div>
   )

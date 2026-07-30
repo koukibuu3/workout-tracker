@@ -38,6 +38,9 @@ export interface WorkoutLog {
   detail_id: number
   memo: string
   created_at: string
+  sets?: number
+  reps?: number
+  weight?: number | null
   detail?: WorkoutDetail // JOINで取得する場合
   item_name?: string // JOINで取得する場合
 }
@@ -50,6 +53,9 @@ export interface WorkoutPlan {
   detail_id: number
   repeat_pattern: string
   created_at: string
+  sets?: number
+  reps?: number
+  weight?: number | null
   detail?: WorkoutDetail // JOINで取得する場合
   item_name?: string // JOINで取得する場合
 }
