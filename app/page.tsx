@@ -5,7 +5,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50">
       <Header />
-      <div className="px-4 py-5 sm:py-7">
+      <div className="px-6 py-5 sm:px-8 sm:py-7">
         <CalendarView />
       </div>
     </main>

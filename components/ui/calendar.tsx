@@ -21,7 +21,7 @@ function Calendar({
       className={cn('p-3', className)}
       classNames={{
         months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
-        month: 'space-y-4',
+        month: 'w-full space-y-4',
         caption: 'flex justify-center pt-1 relative items-center',
         caption_label: 'text-sm font-medium',
         nav: 'space-x-1 flex items-center',
@@ -31,20 +31,22 @@ function Calendar({
         ),
         nav_button_previous: 'absolute left-1',
         nav_button_next: 'absolute right-1',
-        table: 'w-full border-collapse space-y-1 mx-8',
-        head_row: 'flex',
+        table: 'block w-full border-collapse space-y-1',
+        head: 'block w-full',
+        head_row: 'flex w-full justify-between',
         head_cell:
-          'text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]',
-        row: 'flex w-full mt-2',
-        cell: 'h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20',
+          'text-muted-foreground flex aspect-square max-w-11 flex-1 items-center justify-center font-normal text-sm',
+        tbody: 'block w-full',
+        row: 'flex w-full justify-between mt-3',
+        cell: 'aspect-square max-w-11 flex-1 text-center text-base p-0 relative focus-within:relative focus-within:z-20',
         day: cn(
           buttonVariants({ variant: 'ghost' }),
-          'h-9 w-9 p-0 font-normal aria-selected:opacity-100'
+          'h-full w-full rounded-md border border-muted bg-muted/50 p-0 text-base font-medium hover:border-muted-foreground/30 hover:bg-muted aria-selected:border-primary aria-selected:bg-primary aria-selected:text-primary-foreground aria-selected:opacity-100'
         ),
         day_range_end: 'day-range-end',
         day_selected:
           'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground',
-        day_today: 'bg-accent text-accent-foreground',
+        day_today: 'border-muted bg-muted text-foreground',
         day_outside:
           'day-outside text-muted-foreground aria-selected:bg-accent/50 aria-selected:text-muted-foreground',
         day_disabled: 'text-muted-foreground opacity-50',

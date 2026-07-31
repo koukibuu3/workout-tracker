@@ -17,7 +17,6 @@ export function CalendarView() {
   const selectDate = (nextDate: Date | undefined) => {
     if (!nextDate) return
     setDate(nextDate)
-    setShowQuickAdd(true)
   }
 
   return (
@@ -34,7 +33,7 @@ export function CalendarView() {
       </div>
 
       <Card>
-        <CardContent className="flex justify-center p-2 sm:p-4">
+        <CardContent className="p-0">
           <Calendar
             mode="single"
             selected={date}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { format } from "date-fns"
 import { ja } from "date-fns/locale"
+import { CalendarClock, ClipboardCheck } from "lucide-react"
 import { addSimpleWorkout } from "@/app/actions"
 import { Button } from "@/components/ui/button"
 import {
@@ -98,12 +99,28 @@ export function QuickAddWorkoutDrawer({
           <DrawerDescription>{formattedDate}</DrawerDescription>
         </DrawerHeader>
         <div className="overflow-y-auto px-4 pb-2">
-          <div className="grid grid-cols-2 rounded-lg bg-muted p-1">
-            <Button type="button" variant={type === "log" ? "secondary" : "ghost"} onClick={() => setType("log")}>
-              記録
+          <div aria-label="追加する内容" className="grid grid-cols-2 rounded-lg bg-muted p-1" role="tablist">
+            <Button
+              aria-selected={type === "log"}
+              className={type === "log" ? "h-11 bg-primary font-semibold text-primary-foreground shadow-sm hover:bg-primary/90" : "h-11 text-muted-foreground hover:bg-background/70 hover:text-foreground"}
+              onClick={() => setType("log")}
+              role="tab"
+              type="button"
+              variant="ghost"
+            >
+              <ClipboardCheck className="mr-2 h-4 w-4" />
+              記録を追加
             </Button>
-            <Button type="button" variant={type === "plan" ? "secondary" : "ghost"} onClick={() => setType("plan")}>
-              予定
+            <Button
+              aria-selected={type === "plan"}
+              className={type === "plan" ? "h-11 bg-primary font-semibold text-primary-foreground shadow-sm hover:bg-primary/90" : "h-11 text-muted-foreground hover:bg-background/70 hover:text-foreground"}
+              onClick={() => setType("plan")}
+              role="tab"
+              type="button"
+              variant="ghost"
+            >
+              <CalendarClock className="mr-2 h-4 w-4" />
+              予定を追加
             </Button>
           </div>
 
