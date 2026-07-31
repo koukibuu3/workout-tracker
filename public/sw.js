@@ -1,13 +1,8 @@
-const CACHE_NAME = 'workout-tracker-cache-v1';
+const CACHE_NAME = 'workout-tracker-cache-v2';
 const urlsToCache = [
-  '/',
-  '/index.html',
   '/manifest.json',
   '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
-  '/api/workouts',
-  '/api/exercises',
-  '/api/templates'
+  '/icons/icon-512x512.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -16,19 +11,30 @@ self.addEventListener('install', (event) => {
       .then((cache) => {
         return cache.addAll(urlsToCache);
       })
+      .then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  if (
+    request.method !== 'GET' ||
+    url.origin !== self.location.origin ||
+    !url.pathname.startsWith('/_next/static/')
+  ) {
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request)
+    caches.match(request)
       .then((response) => {
         if (response) {
           return response;
         }
-        return fetch(event.request)
+        return fetch(request)
           .then((response) => {
-            // キャッシュ可能なレスポンスのみをキャッシュ
             if (!response || response.status !== 200 || response.type !== 'basic') {
               return response;
             }
@@ -36,7 +42,7 @@ self.addEventListener('fetch', (event) => {
             const responseToCache = response.clone();
             caches.open(CACHE_NAME)
               .then((cache) => {
-                cache.put(event.request, responseToCache);
+                cache.put(request, responseToCache);
               });
 
             return response;
@@ -53,7 +59,7 @@ self.addEventListener('activate', (event) => {
         cacheNames
           .filter((cacheName) => cacheName !== CACHE_NAME)
           .map((cacheName) => caches.delete(cacheName))
-      );
+      ).then(() => self.clients.claim());
     })
   );
 }); 

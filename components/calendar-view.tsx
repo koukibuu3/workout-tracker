@@ -9,8 +9,12 @@ import { DayDetail } from '@/components/day-detail'
 import { QuickAddWorkoutDrawer } from '@/components/quick-add-workout-drawer'
 import { ja } from 'date-fns/locale'
 
-export function CalendarView() {
-  const [date, setDate] = useState(new Date())
+type CalendarViewProps = {
+  initialDate: string
+}
+
+export function CalendarView({ initialDate }: CalendarViewProps) {
+  const [date, setDate] = useState(() => new Date(`${initialDate}T00:00:00`))
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
 
