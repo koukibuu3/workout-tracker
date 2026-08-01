@@ -92,13 +92,13 @@ export function QuickAddWorkoutDrawer({
   const prompt = type === "log" ? "何をしましたか？" : "どんな予定ですか？"
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="mx-auto max-h-[92dvh] max-w-2xl">
+    <Drawer open={open} onOpenChange={onOpenChange} repositionInputs>
+      <DrawerContent className="mx-auto max-w-2xl">
         <DrawerHeader className="pb-2 text-left">
           <DrawerTitle>追加する</DrawerTitle>
           <DrawerDescription>{formattedDate}</DrawerDescription>
         </DrawerHeader>
-        <div className="overflow-y-auto px-4 pb-2">
+        <div className="min-h-0 overflow-y-auto px-4 pb-2">
           <div aria-label="追加する内容" className="grid grid-cols-2 rounded-lg bg-muted p-1" role="tablist">
             <Button
               aria-selected={type === "log"}
