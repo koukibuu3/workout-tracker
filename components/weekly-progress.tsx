@@ -4,8 +4,10 @@ import { useEffect, useState } from "react"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
 import { getWeeklyWorkoutData } from "@/app/actions"
 
+type WeeklyWorkoutDatum = { day: string; count: number }
+
 export function WeeklyProgress() {
-  const [weekData, setWeekData] = useState([])
+  const [weekData, setWeekData] = useState<WeeklyWorkoutDatum[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [stats, setStats] = useState({
     totalCount: 0,

@@ -7,10 +7,12 @@ import { Label } from "@/components/ui/label"
 import { getExerciseProgressData, getWorkoutItems } from "@/app/actions"
 import type { WorkoutItem } from "@/lib/db"
 
+type ProgressDatum = { date: string; weight: number }
+
 export function ExerciseProgress() {
   const [selectedExercise, setSelectedExercise] = useState("")
   const [workoutItems, setWorkoutItems] = useState<WorkoutItem[]>([])
-  const [progressData, setProgressData] = useState([])
+  const [progressData, setProgressData] = useState<ProgressDatum[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [stats, setStats] = useState({
     startWeight: 0,

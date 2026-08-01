@@ -104,7 +104,7 @@ export function EditExerciseDialog({
 
           <div className="space-y-2">
             <Label htmlFor="edit-category">カテゴリー</Label>
-            <Select value={category} onValueChange={setCategory}>
+            <Select value={category ?? ''} onValueChange={setCategory}>
               <SelectTrigger id="edit-category">
                 <SelectValue placeholder="カテゴリーを選択" />
               </SelectTrigger>

@@ -15,7 +15,8 @@ export interface User {
 export interface WorkoutItem {
   id: number
   name: string
-  category: string
+  category: string | null
+  video_url: string | null
 }
 
 export interface WorkoutDetail {
@@ -36,28 +37,30 @@ export interface WorkoutLog {
   user_id: number
   date: string
   detail_id: number
-  memo: string
+  memo: string | null
   created_at: string
   sets?: number
   reps?: number
   weight?: number | null
   detail?: WorkoutDetail // JOINで取得する場合
   item_name?: string // JOINで取得する場合
+  video_url?: string | null // JOINで取得する場合
 }
 
 export interface WorkoutPlan {
   id: number
   user_id: number
   date: string
-  time: string
+  time: string | null
   detail_id: number
-  repeat_pattern: string
+  repeat_pattern: string | null
   created_at: string
   sets?: number
   reps?: number
   weight?: number | null
   detail?: WorkoutDetail // JOINで取得する場合
   item_name?: string // JOINで取得する場合
+  video_url?: string | null // JOINで取得する場合
 }
 
 export interface WorkoutTemplate {
@@ -69,5 +72,6 @@ export interface WorkoutTemplate {
     sets: number
     reps: number
     weight: number
+    video_url?: string | null
   }[]
 }

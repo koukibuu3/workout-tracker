@@ -18,6 +18,20 @@ export type SimpleWorkoutInput = {
   repeatPattern?: "daily" | "weekly" | "monthly" | null
 }
 
+type TemplateRow = {
+  id: number
+  name: string
+  sets: number
+  reps: number
+  weight: number
+  category: string | null
+  video_url: string | null
+}
+
+type MonthlyWorkoutRow = { date: string; count: string | number }
+type WeeklyWorkoutRow = { day_of_week: string | number; count: string | number }
+type ExerciseProgressRow = { date: string; weight: string | number }
+
 async function findOrCreateWorkoutItem(name: string) {
   const [existingItem] = (await sql`
     SELECT id FROM workout_items
@@ -85,16 +99,16 @@ export async function addSimpleWorkout(input: SimpleWorkoutInput) {
 
 // 種目一覧を取得
 export async function getWorkoutItems(): Promise<WorkoutItem[]> {
-  const items = await sql<WorkoutItem[]>`
+  const items = (await sql`
     SELECT id, name, category, video_url FROM workout_items
     ORDER BY category, name
-  `
+  `) as WorkoutItem[]
   return items
 }
 
 // 特定の日付のトレーニング記録を取得
 export async function getWorkoutLogsByDate(date: string): Promise<WorkoutLog[]> {
-  const logs = await sql<WorkoutLog[]>`
+  const logs = (await sql`
     SELECT 
       wl.id, wl.user_id, wl.date, wl.detail_id, wl.memo, wl.created_at,
       wi.name as item_name, wi.video_url,
@@ -105,13 +119,13 @@ export async function getWorkoutLogsByDate(date: string): Promise<WorkoutLog[]> 
     WHERE wl.user_id = ${DEFAULT_USER_ID}
     AND wl.date = ${date}
     ORDER BY wl.created_at DESC
-  `
+  `) as WorkoutLog[]
   return logs
 }
 
 // 特定の日付のトレーニング予定を取得
 export async function getWorkoutPlansByDate(date: string): Promise<WorkoutPlan[]> {
-  const plans = await sql<WorkoutPlan[]>`
+  const plans = (await sql`
     SELECT 
       wp.id, wp.user_id, wp.date, wp.time, wp.detail_id, wp.repeat_pattern, wp.created_at,
       wi.name as item_name, wi.video_url,
@@ -122,7 +136,7 @@ export async function getWorkoutPlansByDate(date: string): Promise<WorkoutPlan[]
     WHERE wp.user_id = ${DEFAULT_USER_ID}
     AND wp.date = ${date}
     ORDER BY wp.time
-  `
+  `) as WorkoutPlan[]
   return plans
 }
 
@@ -136,11 +150,11 @@ export async function addWorkoutLog(
   memo = "",
 ) {
   // 1. workout_detailsに追加
-  const [detailResult] = await sql<[{ id: number }]>`
+  const [detailResult] = (await sql`
     INSERT INTO workout_details (item_id, sets, reps, weight, created_by)
     VALUES (${itemId}, ${sets}, ${reps}, ${weight}, ${DEFAULT_USER_ID})
     RETURNING id
-  `
+  `) as { id: number }[]
 
   // 2. workout_logsに追加
   await sql`
@@ -158,15 +172,15 @@ export async function addWorkoutPlan(
   sets: number,
   reps: number,
   weight: number,
-  time: string = null,
-  repeatPattern: string = null,
+  time: string | null = null,
+  repeatPattern: string | null = null,
 ) {
   // 1. workout_detailsに追加
-  const [detailResult] = await sql<[{ id: number }]>`
+  const [detailResult] = (await sql`
     INSERT INTO workout_details (item_id, sets, reps, weight, created_by)
     VALUES (${itemId}, ${sets}, ${reps}, ${weight}, ${DEFAULT_USER_ID})
     RETURNING id
-  `
+  `) as { id: number }[]
 
   // 2. workout_plansに追加
   await sql`
@@ -178,8 +192,8 @@ export async function addWorkoutPlan(
 }
 
 // トレーニングテンプレートを取得
-export async function getWorkoutTemplates() {
-  const templates = await sql`
+export async function getWorkoutTemplates(): Promise<import("@/lib/db").WorkoutTemplate[]> {
+  const templates = (await sql`
     SELECT 
       wd.id, 
       wi.name as name,
@@ -193,7 +207,7 @@ export async function getWorkoutTemplates() {
     WHERE wd.is_template = true
     AND wd.created_by = ${DEFAULT_USER_ID}
     ORDER BY wd.created_at DESC
-  `
+  `) as TemplateRow[]
 
   // テンプレートをグループ化
   const groupedTemplates = templates.reduce((acc, template) => {
@@ -210,7 +224,7 @@ export async function getWorkoutTemplates() {
     } else {
       acc.push({
         id: acc.length + 1,
-        name: template.category,
+        name: template.category ?? "未分類",
         exercises: [
           {
             id: template.id,
@@ -224,7 +238,7 @@ export async function getWorkoutTemplates() {
       })
     }
     return acc
-  }, [])
+  }, [] as import("@/lib/db").WorkoutTemplate[])
 
   return groupedTemplates
 }
@@ -244,7 +258,7 @@ export async function getMonthlyWorkoutData(year: number, month: number) {
   const startDate = `${year}-${month.toString().padStart(2, "0")}-01`
   const endDate = `${year}-${month.toString().padStart(2, "0")}-31`
 
-  const result = await sql`
+  const result = (await sql`
     SELECT 
       wl.date, 
       COUNT(*) as count
@@ -253,12 +267,12 @@ export async function getMonthlyWorkoutData(year: number, month: number) {
     AND wl.date BETWEEN ${startDate} AND ${endDate}
     GROUP BY wl.date
     ORDER BY wl.date
-  `
+  `) as MonthlyWorkoutRow[]
 
   // 日付をキー、カウントを値とするオブジェクトに変換
-  const monthData = {}
+  const monthData: Record<string, number> = {}
   result.forEach((row) => {
-    monthData[row.date] = Number.parseInt(row.count)
+    monthData[row.date] = Number(row.count)
   })
 
   return monthData
@@ -266,7 +280,7 @@ export async function getMonthlyWorkoutData(year: number, month: number) {
 
 // 週間のトレーニング記録を取得
 export async function getWeeklyWorkoutData() {
-  const result = await sql`
+  const result = (await sql`
     SELECT 
       EXTRACT(DOW FROM wl.date) as day_of_week,
       COUNT(*) as count
@@ -275,15 +289,15 @@ export async function getWeeklyWorkoutData() {
     AND wl.date >= CURRENT_DATE - INTERVAL '7 days'
     GROUP BY day_of_week
     ORDER BY day_of_week
-  `
+  `) as WeeklyWorkoutRow[]
 
   // 曜日ごとのデータを整形
   const weekDays = ["日", "月", "火", "水", "木", "金", "土"]
   const weekData = weekDays.map((day, index) => {
-    const dayData = result.find((r) => Number.parseInt(r.day_of_week) === index)
+    const dayData = result.find((r) => Number(r.day_of_week) === index)
     return {
       day,
-      count: dayData ? Number.parseInt(dayData.count) : 0,
+      count: dayData ? Number(dayData.count) : 0,
     }
   })
 
@@ -292,7 +306,7 @@ export async function getWeeklyWorkoutData() {
 
 // 種目ごとの進捗データを取得
 export async function getExerciseProgressData(itemName: string) {
-  const result = await sql`
+  const result = (await sql`
     SELECT 
       wl.date,
       wd.weight
@@ -302,11 +316,11 @@ export async function getExerciseProgressData(itemName: string) {
     WHERE wl.user_id = ${DEFAULT_USER_ID}
     AND wi.name = ${itemName}
     ORDER BY wl.date
-  `
+  `) as ExerciseProgressRow[]
 
   return result.map((row) => ({
     date: new Date(row.date).toLocaleDateString("ja-JP", { month: "numeric", day: "numeric" }),
-    weight: Number.parseFloat(row.weight),
+    weight: Number(row.weight),
   }))
 }
 
@@ -335,10 +349,10 @@ export async function updateUserSettings(name: string, goalPerWeek: number, noti
 // トレーニング記録を削除
 export async function deleteWorkoutLog(logId: number) {
   // まず関連するdetail_idを取得
-  const [log] = await sql<[{ detail_id: number }]>`
+  const [log] = (await sql`
     SELECT detail_id FROM workout_logs
     WHERE id = ${logId}
-  `
+  `) as { detail_id: number }[]
 
   if (log) {
     // 個別のクエリとして実行（トランザクションなし）
@@ -354,10 +368,10 @@ export async function deleteWorkoutLog(logId: number) {
 // トレーニング予定を削除
 export async function deleteWorkoutPlan(planId: number) {
   // まず関連するdetail_idを取得
-  const [plan] = await sql<[{ detail_id: number }]>`
+  const [plan] = (await sql`
     SELECT detail_id FROM workout_plans
     WHERE id = ${planId}
-  `
+  `) as { detail_id: number }[]
 
   if (plan) {
     // 個別のクエリとして実行（トランザクションなし）
@@ -410,10 +424,10 @@ export async function updateWorkoutLog(
   memo = "",
 ) {
   // まず関連するdetail_idを取得
-  const [log] = await sql<[{ detail_id: number }]>`
+  const [log] = (await sql`
     SELECT detail_id FROM workout_logs
     WHERE id = ${logId}
-  `
+  `) as { detail_id: number }[]
 
   if (log) {
     // workout_detailsを更新
@@ -440,14 +454,14 @@ export async function updateWorkoutPlan(
   sets: number,
   reps: number,
   weight: number,
-  time: string = null,
-  repeatPattern: string = null,
+  time: string | null = null,
+  repeatPattern: string | null = null,
 ) {
   // まず関連するdetail_idを取得
-  const [plan] = await sql<[{ detail_id: number }]>`
+  const [plan] = (await sql`
     SELECT detail_id FROM workout_plans
     WHERE id = ${planId}
-  `
+  `) as { detail_id: number }[]
 
   if (plan) {
     // workout_detailsを更新
@@ -505,7 +519,7 @@ export async function deleteTemplate(templateId: number) {
 }
 
 // 種目を追加
-export async function addExercise(name: string, category: string, videoUrl: string = null) {
+export async function addExercise(name: string, category: string, videoUrl: string | null = null) {
   await sql`
     INSERT INTO workout_items (name, category, video_url)
     VALUES (${name}, ${category}, ${videoUrl})
@@ -515,7 +529,7 @@ export async function addExercise(name: string, category: string, videoUrl: stri
 }
 
 // 種目を更新
-export async function updateExercise(id: number, name: string, category: string, videoUrl: string = null) {
+export async function updateExercise(id: number, name: string, category: string, videoUrl: string | null = null) {
   await sql`
     UPDATE workout_items
     SET name = ${name}, category = ${category}, video_url = ${videoUrl}
@@ -528,13 +542,13 @@ export async function updateExercise(id: number, name: string, category: string,
 // 種目を削除
 export async function deleteExercise(id: number) {
   // 種目を使用しているワークアウト詳細があるか確認
-  const [usageCount] = await sql<[{ count: number }]>`
+  const [usageCount] = (await sql`
     SELECT COUNT(*) as count
     FROM workout_details
     WHERE item_id = ${id}
-  `
+  `) as { count: string | number }[]
 
-  if (Number.parseInt(usageCount.count) > 0) {
+  if (Number(usageCount.count) > 0) {
     throw new Error("この種目は既にトレーニングで使用されているため削除できません")
   }
 
