@@ -2,19 +2,54 @@
 
 import * as React from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { DayPicker } from 'react-day-picker'
+import { DayButton, DayPicker, type DayButtonProps } from 'react-day-picker'
 
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
 
-export type CalendarProps = React.ComponentProps<typeof DayPicker>
+type CalendarDayStatus = {
+  hasPlan: boolean
+  logCount: number
+}
+
+export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
+  dayStatuses?: Record<string, CalendarDayStatus>
+}
+
+function getLogIntensityClass(logCount: number) {
+  if (logCount >= 3) return 'bg-primary/35 text-foreground'
+  if (logCount === 2) return 'bg-primary/20 text-foreground'
+  if (logCount === 1) return 'bg-primary/10 text-foreground'
+  return ''
+}
 
 function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  dayStatuses = {},
   ...props
 }: CalendarProps) {
+  const CalendarDayButton = ({ day, modifiers, children, className, ...buttonProps }: DayButtonProps) => {
+    const status = dayStatuses[day.isoDate]
+    const label = status
+      ? `${buttonProps['aria-label']}: 記録${status.logCount}件${status.hasPlan ? '、予定あり' : ''}`
+      : undefined
+
+    return (
+      <DayButton
+        {...buttonProps}
+        aria-label={label || buttonProps['aria-label']}
+        className={cn(className, 'relative flex flex-col items-center justify-center', modifiers.selected ? '' : getLogIntensityClass(status?.logCount || 0))}
+        day={day}
+        modifiers={modifiers}
+      >
+        <span>{children}</span>
+        {status?.hasPlan && <span aria-hidden="true" className={cn('absolute bottom-1 h-1 w-1 rounded-full', modifiers.selected ? 'bg-primary-foreground' : 'bg-violet-600')} />}
+      </DayButton>
+    )
+  }
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -57,6 +92,7 @@ function Calendar({
         ...classNames,
       }}
       components={{
+        DayButton: CalendarDayButton,
         Chevron: ({ orientation }) =>
           orientation === 'left' ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />,
       }}

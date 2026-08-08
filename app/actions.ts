@@ -29,6 +29,7 @@ type TemplateRow = {
 }
 
 type MonthlyWorkoutRow = { date: string; count: string | number }
+type CalendarDayStatusRow = { date: string; log_count: string | number; plan_count: string | number }
 type WeeklyWorkoutRow = { day_of_week: string | number; count: string | number }
 type ExerciseProgressRow = { date: string; weight: string | number }
 
@@ -276,6 +277,47 @@ export async function getMonthlyWorkoutData(year: number, month: number) {
   })
 
   return monthData
+}
+
+/** カレンダーに表示する、日ごとの記録数と予定の有無を取得する。 */
+export async function getCalendarDayStatuses(year: number, month: number) {
+  const startDate = `${year}-${month.toString().padStart(2, "0")}-01`
+  const nextMonth = new Date(year, month, 1)
+  const endDate = `${nextMonth.getFullYear()}-${(nextMonth.getMonth() + 1).toString().padStart(2, "0")}-01`
+
+  const result = (await sql`
+    SELECT
+      TO_CHAR(dates.date, 'YYYY-MM-DD') as date,
+      COUNT(DISTINCT wl.id) as log_count,
+      COUNT(DISTINCT wp.id) as plan_count
+    FROM (
+      SELECT date FROM workout_logs
+      WHERE user_id = ${DEFAULT_USER_ID}
+      AND date >= ${startDate}
+      AND date < ${endDate}
+      UNION
+      SELECT date FROM workout_plans
+      WHERE user_id = ${DEFAULT_USER_ID}
+      AND date >= ${startDate}
+      AND date < ${endDate}
+    ) dates
+    LEFT JOIN workout_logs wl
+      ON wl.date = dates.date
+      AND wl.user_id = ${DEFAULT_USER_ID}
+    LEFT JOIN workout_plans wp
+      ON wp.date = dates.date
+      AND wp.user_id = ${DEFAULT_USER_ID}
+    GROUP BY dates.date
+    ORDER BY dates.date
+  `) as CalendarDayStatusRow[]
+
+  return result.reduce<Record<string, { logCount: number; hasPlan: boolean }>>((statuses, row) => {
+    statuses[row.date] = {
+      logCount: Number(row.log_count),
+      hasPlan: Number(row.plan_count) > 0,
+    }
+    return statuses
+  }, {})
 }
 
 // 週間のトレーニング記録を取得
