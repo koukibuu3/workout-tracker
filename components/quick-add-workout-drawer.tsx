@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useLayoutEffect, useState } from "react"
 import { format } from "date-fns"
 import { ja } from "date-fns/locale"
 import { CalendarClock, ClipboardCheck } from "lucide-react"
@@ -30,6 +30,28 @@ type QuickAddWorkoutDrawerProps = {
 
 const asOptionalNumber = (value: string) => (value.trim() ? Number(value) : null)
 
+type KeyboardViewport = {
+  bottom: number
+  height: number | null
+}
+
+const CLOSED_KEYBOARD_VIEWPORT: KeyboardViewport = { bottom: 0, height: null }
+const KEYBOARD_HEIGHT_THRESHOLD = 100
+
+function getKeyboardViewport(): KeyboardViewport {
+  const viewport = window.visualViewport
+  if (!viewport) return CLOSED_KEYBOARD_VIEWPORT
+
+  const keyboardHeight = Math.max(
+    0,
+    window.innerHeight - (viewport.height + viewport.offsetTop),
+  )
+
+  return keyboardHeight >= KEYBOARD_HEIGHT_THRESHOLD
+    ? { bottom: keyboardHeight, height: viewport.height }
+    : CLOSED_KEYBOARD_VIEWPORT
+}
+
 export function QuickAddWorkoutDrawer({
   date,
   open,
@@ -46,6 +68,9 @@ export function QuickAddWorkoutDrawer({
   const [memo, setMemo] = useState("")
   const [time, setTime] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [keyboardViewport, setKeyboardViewport] = useState<KeyboardViewport>(
+    CLOSED_KEYBOARD_VIEWPORT,
+  )
 
   useEffect(() => {
     if (!open) {
@@ -59,6 +84,27 @@ export function QuickAddWorkoutDrawer({
       setTime("")
     }
   }, [initialType, open])
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setKeyboardViewport(CLOSED_KEYBOARD_VIEWPORT)
+      return
+    }
+
+    const updateKeyboardViewport = () => {
+      setKeyboardViewport(getKeyboardViewport())
+    }
+
+    const viewport = window.visualViewport
+    updateKeyboardViewport()
+    viewport?.addEventListener("resize", updateKeyboardViewport)
+    viewport?.addEventListener("scroll", updateKeyboardViewport)
+
+    return () => {
+      viewport?.removeEventListener("resize", updateKeyboardViewport)
+      viewport?.removeEventListener("scroll", updateKeyboardViewport)
+    }
+  }, [open])
 
   const submit = async () => {
     if (!name.trim()) {
@@ -92,8 +138,18 @@ export function QuickAddWorkoutDrawer({
   const prompt = type === "log" ? "何をしましたか？" : "どんな予定ですか？"
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} repositionInputs>
-      <DrawerContent className="mx-auto max-w-2xl">
+    <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>
+      <DrawerContent
+        className="mx-auto max-w-2xl"
+        style={
+          keyboardViewport.height
+            ? {
+                bottom: `${keyboardViewport.bottom}px`,
+                maxHeight: `${keyboardViewport.height}px`,
+              }
+            : undefined
+        }
+      >
         <DrawerHeader className="pb-2 text-left">
           <DrawerTitle>追加する</DrawerTitle>
           <DrawerDescription>{formattedDate}</DrawerDescription>
