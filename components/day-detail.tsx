@@ -12,9 +12,10 @@ import type { WorkoutLog, WorkoutPlan } from "@/lib/db"
 interface DayDetailProps {
   date: Date
   onAdd: () => void
+  onDataChange?: () => void
 }
 
-export function DayDetail({ date, onAdd }: DayDetailProps) {
+export function DayDetail({ date, onAdd, onDataChange }: DayDetailProps) {
   const [logs, setLogs] = useState<WorkoutLog[]>([])
   const [plans, setPlans] = useState<WorkoutPlan[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -42,6 +43,11 @@ export function DayDetail({ date, onAdd }: DayDetailProps) {
     fetchData()
   }, [dateString])
 
+  const refreshData = async () => {
+    await fetchData()
+    onDataChange?.()
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -53,11 +59,11 @@ export function DayDetail({ date, onAdd }: DayDetailProps) {
         <>
           <section className="space-y-2">
             <h3 className="text-sm font-semibold">予定 {plans.length > 0 && <span className="text-muted-foreground">{plans.length}</span>}</h3>
-            {plans.length > 0 ? plans.map((plan) => <SimpleWorkoutItem date={dateString} key={plan.id} onUpdate={fetchData} plan={plan} />) : <p className="py-2 text-sm text-muted-foreground">予定はありません</p>}
+            {plans.length > 0 ? plans.map((plan) => <SimpleWorkoutItem date={dateString} key={plan.id} onUpdate={refreshData} plan={plan} />) : <p className="py-2 text-sm text-muted-foreground">予定はありません</p>}
           </section>
           <section className="space-y-2">
             <h3 className="text-sm font-semibold">記録 {logs.length > 0 && <span className="text-muted-foreground">{logs.length}</span>}</h3>
-            {logs.length > 0 ? logs.map((log) => <SimpleWorkoutItem key={log.id} log={log} onUpdate={fetchData} />) : <p className="py-2 text-sm text-muted-foreground">記録はありません</p>}
+            {logs.length > 0 ? logs.map((log) => <SimpleWorkoutItem key={log.id} log={log} onUpdate={refreshData} />) : <p className="py-2 text-sm text-muted-foreground">記録はありません</p>}
           </section>
         </>
       )}
