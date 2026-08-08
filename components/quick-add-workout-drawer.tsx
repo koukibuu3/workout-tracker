@@ -12,7 +12,6 @@ import {
   DrawerDescription,
   DrawerFooter,
   DrawerHeader,
-  DrawerTitle,
 } from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -151,14 +150,13 @@ export function QuickAddWorkoutDrawer({
         }
       >
         <DrawerHeader className="pb-2 text-left">
-          <DrawerTitle>追加する</DrawerTitle>
           <DrawerDescription>{formattedDate}</DrawerDescription>
         </DrawerHeader>
         <div className="min-h-0 overflow-y-auto px-4 pb-2">
           <div aria-label="追加する内容" className="grid grid-cols-2 rounded-lg bg-muted p-1" role="tablist">
             <Button
               aria-selected={type === "log"}
-              className={type === "log" ? "h-11 bg-primary font-semibold text-primary-foreground shadow-sm hover:bg-primary/90" : "h-11 text-muted-foreground hover:bg-background/70 hover:text-foreground"}
+              className={type === "log" ? "h-11 bg-primary font-semibold !text-primary-foreground shadow-sm hover:bg-primary/90 hover:!text-primary-foreground" : "h-11 text-muted-foreground hover:bg-background/70 hover:text-foreground"}
               onClick={() => setType("log")}
               role="tab"
               type="button"
@@ -169,7 +167,7 @@ export function QuickAddWorkoutDrawer({
             </Button>
             <Button
               aria-selected={type === "plan"}
-              className={type === "plan" ? "h-11 bg-primary font-semibold text-primary-foreground shadow-sm hover:bg-primary/90" : "h-11 text-muted-foreground hover:bg-background/70 hover:text-foreground"}
+              className={type === "plan" ? "h-11 bg-primary font-semibold !text-primary-foreground shadow-sm hover:bg-primary/90 hover:!text-primary-foreground" : "h-11 text-muted-foreground hover:bg-background/70 hover:text-foreground"}
               onClick={() => setType("plan")}
               role="tab"
               type="button"
@@ -207,6 +205,9 @@ export function QuickAddWorkoutDrawer({
               ) : (
                 <div className="space-y-1"><Label htmlFor="quick-memo">メモ</Label><Textarea id="quick-memo" value={memo} onChange={(event) => setMemo(event.target.value)} /></div>
               )}
+              <Button className="px-0" type="button" variant="link" onClick={() => setShowDetails(false)}>
+                - 詳細を閉じる
+              </Button>
             </div>
           )}
         </div>
